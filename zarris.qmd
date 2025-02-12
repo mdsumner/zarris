@@ -1,0 +1,59 @@
+---
+title: "Zarr Is"
+author: "Michael Sumner"
+format: html
+editor: visual
+---
+
+## Zarr Is?
+
+[Zarr](https://zarr.dev/) is a cloud-native storage format for modern computing, it provides a very general way to store array based data that aims to include all of the good features of legacy formats without being bound to any of them. It aspires to be *the* canonical array-based format. 
+
+Zarr is also a rendered form of [xarray](https://xarray.dev/), an array-computing abstraction that can represent datasets of any size, and of any dimensional, mutivariate, or hierarchical complexity. 
+
+Zarr is a also a set of *good tricks*. 
+
+## The tricks
+
+1) A neat abstraction over complex file formats that don't exist as a single store, it literally turns the idea of a file inside out by making it explicit where the chunks of array data (bytes) are along with the information needed to access and interpret them. Imagine a distributed virtual array that exists in 8501 daily netcdf files: that represents a long time series of (say) XYZ{T} data from an observational platform. We know that time is spread among the files, and if XYZ is very large then the actual data is spread within the data in digestable chunks. Zarr says, those chunks are stored somewhere and I have a list of those and I also have the full metadata model that knows how to interpret and arrange those chunks. Of course we never arrange the chunks, our virtual datasets ever larger and larger, but the interpretation model can quickly take us to the chunk/s we need or to farm the chunks out through (relatively) simple task that operate on a chunk at a time. 
+
+2) The chunks can be files, objects at a S3 url, byte ranges in other files or objects. I think we could say that the tricks are xarray-tricks, and that Zarr is a rendered version, a format suitable for enabling all the xarray features. 
+
+WIP I think I need to reframe how this is structured. xarray and Zarr reflect each other, but the Zarr spec doesn't include all of the excellent xarray features. 
+
+## The questions
+
+1) Zarr in xarray includes some excellent features, we don't need to use the netcdf library to read a virtual Zarr. We need the netcdf library to creat the virtual Zarr, but once that's done we can use the byte references. The Zarr spec does not include these virtual formats, namely .json and .parquet serialized forms of xarray, does this belong in the spec or is it an xarray feature only?
+
+2)  xarray includes a very general model of coordinates, since PR 9543. This allows us to be explicit in a way that CF conventions never did about the structure of a grid and its coordinate referencing. (We aren't talking about geospatial here, - do we need something about textures on a non-geospatial surface?? ). Zarr does not include this generalization, it is modelled tightly on the CF convention of *explict coordinates*. If a dimension or set of dimensions is *regular*, they are described independently by 1D arrays of coordinates, and not by a sequence abstraction or affine abstraction. Will the Zarr spec include this generalized model of coordinate referencing, or is that an xarray feature only? 
+
+## The landscape
+
+What software exists? These in descending order of virtualization support. 
+
+Python: zarr-python is really the canonical implementation, and xarray tightly supports this and allows read of Zarr in a file system, an object store, ..., from virtualized .json and .parquet stores. 
+
+zarrs a Rust library, supports virtualization
+
+NCZarr, internal to NetCDF library, supports remote stores only by build-configuration, a maybe for virtualization (probably via DMR++/opendap but probably not the kerchunk stores)
+
+(none of the next ones support virtualization, GDAL has some mixed support of generalized coordinates)
+
+GDAL internal C++ library, classic raster and multidim array
+
+stars - in R via sf (via GDAL) suppports reading Zarr with the GDAL driver in multdim model
+
+terra/stars/gdalraster - all support the Zarr driver in classic raster mode of GDAL
+
+pizzarr  - a pure R implementation, no virtualization support
+
+Rarr- a C implementation bound in R, no virtualization support
+
+WIP: don't know about virtualization support see longer list here: https://zarr.dev/implementations/
+
+TensorStore, z5, Rust-zarr, Rust-zarr3
+
+
+
+
+Non-geospatial: drawing texture images on a 3D model is "spatial" but not especially geospatial - an affine transform of an image that defines where a bitmap tattoo be drawn on a 3D centaur rendering is *relative to the coordinate system of the surface of the centaur*. Is the tattoo a regular grid, or a rectilinear one? (WIP)
