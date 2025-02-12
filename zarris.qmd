@@ -21,12 +21,25 @@ Zarr is a also a set of *good tricks*.
 
 WIP I think I need to reframe how this is structured. xarray and Zarr reflect each other, but the Zarr spec doesn't include all of the excellent xarray features. 
 
-## The questions
+## The questions (original framing)
 
 1) Zarr in xarray includes some excellent features, we don't need to use the netcdf library to read a virtual Zarr. We need the netcdf library to creat the virtual Zarr, but once that's done we can use the byte references. The Zarr spec does not include these virtual formats, namely .json and .parquet serialized forms of xarray, does this belong in the spec or is it an xarray feature only?
 
 2)  xarray includes a very general model of coordinates, since PR 9543. This allows us to be explicit in a way that CF conventions never did about the structure of a grid and its coordinate referencing. (We aren't talking about geospatial here, - do we need something about textures on a non-geospatial surface?? ). Zarr does not include this generalization, it is modelled tightly on the CF convention of *explict coordinates*. If a dimension or set of dimensions is *regular*, they are described independently by 1D arrays of coordinates, and not by a sequence abstraction or affine abstraction. Will the Zarr spec include this generalized model of coordinate referencing, or is that an xarray feature only? 
 
+## Same questions, a GDAL framing
+
+I've realized my stance comes down to two questions: 
+
+1) is VirtualiZarr  a Zarr feature or an xarray feature? It's a really neat serialization of an xarray object, that transcends legacy file formats by referencing their bytes directly   (by VirtualiZarr I also like to incude DMR++ which is part of the broader potential). Is the VirtualiZarr store a Zarr store or an xarray store? 
+
+2) is the generalization of coordinates offered by [xarray PR#9543](https://github.com/pydata/xarray/pull/9543) intended to be folded into Zarr as well? My take is that GeoZarr needs to drawn from that more general foundation, but without that a simple transform+crs would really help Zarr itself, to make explicit the difference between explicit regular grid and implicit regular grid (via degenerate 1D coordinates as per the CF convention)
+
+I don't know how to navigate discussion in GDAL without clarity on these. If GDAL sticks to the v3 spec we miss a lot of potential value, but I don't think GDAL should implement workarounds that are just copies of xarray features. 
+
+
+
+ 
 ## The landscape
 
 What software exists? These in descending order of virtualization support. 
